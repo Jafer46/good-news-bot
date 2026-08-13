@@ -5,7 +5,7 @@ import google.generativeai as genai
 
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
-MODEL_NAME = "gemini-2.5-flash"
+MODEL_NAME = "gemini-3-flash-lite"
 
 PROMPT_TEMPLATE = """You are a careful news editor. You will be given a social
 media post, likely in Amharic (it may contain some English too).
