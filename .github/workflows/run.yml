@@ -1,0 +1,45 @@
+name: Good News Ethiopia Bot
+
+on:
+  schedule:
+    # Runs every 30 minutes. Edit the cron expression to change frequency.
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {} # lets you trigger it manually from the Actions tab
+
+permissions:
+  contents: write # needed so the workflow can commit state.json back
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run bot
+        env:
+          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+          TELEGRAM_SESSION: ${{ secrets.TELEGRAM_SESSION }}
+          SOURCE_CHANNEL: ${{ secrets.SOURCE_CHANNEL }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          DEST_CHANNEL_ID: ${{ secrets.DEST_CHANNEL_ID }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOD_NEWS_CONFIDENCE_THRESHOLD: "0.75"
+        run: python main.py
+
+      - name: Commit updated state
+        run: |
+          git config user.name "good-news-bot"
+          git config user.email "actions@github.com"
+          git add state.json
+          git diff --staged --quiet || git commit -m "Update last processed post id [skip ci]"
+          git push
