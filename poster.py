@@ -6,6 +6,11 @@ DEST_CHANNEL_ID = os.environ["DEST_CHANNEL_ID"]
 
 API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
+# Telegram hard-caps sendMessage text at 4096 characters (including HTML tags).
+# Leave headroom for the summary, link, and markup around the blockquote.
+TELEGRAM_MAX_LEN = 4096
+SAFETY_MARGIN = 300
+
 
 def _escape_html(text: str) -> str:
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
@@ -14,6 +19,10 @@ def _escape_html(text: str) -> str:
 def build_message(summary: str, translation_full: str, source_link: str) -> str:
     summary_html = _escape_html(summary)
     full_html = _escape_html(translation_full)
+
+    budget = TELEGRAM_MAX_LEN - SAFETY_MARGIN - len(summary_html) - len(source_link)
+    if len(full_html) > budget:
+        full_html = full_html[: max(budget, 0)].rstrip() + "… (truncated — see original)"
 
     return (
         "🟢 <b>Good News Ethiopia</b>\n\n"
